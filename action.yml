@@ -20,7 +20,10 @@ runs:
   steps:
     - name: Get current commit SHA
       id: get_sha
-      run: echo "::set-output name=sha::$(git rev-parse HEAD)"
+      run: |
+        # echo "::set-output name=sha::$(git rev-parse HEAD)"
+        echo echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
       shell: bash
 
     - name: Create and push tag in target repository
