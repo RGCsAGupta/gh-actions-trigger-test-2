@@ -1,0 +1,42 @@
+name: Trigger sanity script
+description: Trigger sanity script
+
+inputs:
+  app-name:
+    description: "Application name"
+    required: true
+  app-version:
+    description: "Application version"
+    required: true
+  git-user:
+    description: "Git user"
+    required: true
+  git-pat:
+    description: "Git PAT"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get current commit SHA
+      id: get_sha
+      run: echo "::set-output name=sha::$(git rev-parse HEAD)"
+      shell: bash
+
+    - name: Create and push tag in target repository
+      env:
+        TARGET_REPO_OWNER: "nuralogix"
+        TARGET_REPO_NAME: "dfx-autodemo-py"
+      run: |
+        TAG_NAME="${{ inputs.app-name }}-${{ inputs.app-version }}-${{ steps.get_sha.outputs.sha }}"
+
+        echo "Creating tag $TAG_NAME in target repository"
+
+        git config --global user.email "${{ secrets.GH_AUTOMATION_USERNAME }}@nuralogix.ai"
+        git config --global user.name "${{ secrets.GH_AUTOMATION_USERNAME }}"
+
+        git clone "https://${{ secrets.GH_AUTOMATION_USERNAME }}:${{ secrets.GH_PAT }}@github.com/${TARGET_REPO_OWNER}/${TARGET_REPO_NAME}.git"
+        cd ${{ env.TARGET_REPO_NAME }}
+        git tag $TAG_NAME
+        git push --tags
+      shell: bash
